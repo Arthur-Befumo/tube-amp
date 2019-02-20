@@ -1,8 +1,9 @@
 #include <iostream>
+#include <csound/csound.hpp>
 
-int main()
+int main(int argc, char** argv)
 {
-	std::cout<<"Hello World\n";
-
+	Csound* cs = new Csound();
+	cs->SetInput("beep.wav");
 	return 0;
 }
