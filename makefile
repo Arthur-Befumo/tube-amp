@@ -1,10 +1,10 @@
-CC = g++
-CFLAGS = -g -Wall -DUSE_DOUBLE
+CC = gcc
+CFLAGS = -g -Wall
 TARGET = main
 
 all: $(TARGET)
 
-$(TARGET): $(TARGET).cpp
-	$(CC) $(CFLAGS) -o $(TARGET) $(TARGET).cpp -lcsound64
+$(TARGET): $(TARGET).c
+	$(CC) $(CFLAGS) -o $(TARGET) $(TARGET).c -lsndfile
 clean:
 	$(RM) $(TARGE)
