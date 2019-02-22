@@ -89,7 +89,7 @@ int main(int argc, char **argv)
 			ptr = malloc(sizeof(double) * info->channels * BATCH_SIZE);
 		}
 
-		free(ptr);
+		
 
 		while(stack->next != NULL) {
 			reverse_buffer(stack->data, stack->length);
