@@ -3,52 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sndfile.h>
+#include "tubeamp.h"
 
 #define BATCH_SIZE ((sf_count_t) 10000)
-
-typedef struct node {
-	struct node *next;
-	double *data;
-	sf_count_t length;
-} NODE;
-
-static void
-print_info(SF_INFO *info) {
-	printf("Sample Rate: %d\n"
-		"Channels: %d\n"
-		"Frames: %ld\n", info->samplerate, info->channels, info->frames);
-}
-
-NODE *
-push_node(NODE *current_node, double *ptr, sf_count_t length) {
-	NODE *new_node = malloc(sizeof(NODE));
-	new_node->next = current_node;
-	new_node->data = ptr;
-	new_node->length = length;
-	return new_node;
-}
-
-NODE *
-pop_node(NODE *current_node) {
-	NODE * next_node = current_node->next;
-	free(current_node->data);
-	free(current_node);
-	return next_node;
-}
-
-static void
-reverse_buffer(double *ptr, sf_count_t length) {
-	int a = 0;
-	int b = (int) length;
-
-	while (a < b) {
-		double temp = ptr[a];
-		ptr[a] = ptr[b];
-		ptr[b] = temp;
-		a++;
-		b--;
-	}
-}
 
 SNDFILE *
 open_file(const char *filename, SF_INFO *info)
@@ -59,7 +16,6 @@ open_file(const char *filename, SF_INFO *info)
 	}
 	else {
 		printf("Opened file: '%s'\n", filename);
-		print_info(info);
 	}
 	return file;
 }
@@ -71,50 +27,95 @@ create_file(const char *filename, SF_INFO *info)
 	return file;
 }
 
+void
+print_config(TUBECONFIG * config)
+{
+	printf("\
+	CONFIG:\
+	Mu: %f\n\
+	K_p: %f\n\
+	K_vb: %f\n\
+	K_g: %f\n\
+	E_x: %f\n\
+	V_lambda: %f\n\
+	R_gk: %f\n\
+	K: %f\n\
+	Baseline: %f\n",
+		config->Mu,
+		config->K_p,
+		config->K_vb,
+		config->K_g,
+		config->Ex,
+		config->V_lambda,
+		config->R_gk,
+		config->K,
+		config->baseline);
+}
+
+void
+free_batches(BATCH *ptr)
+{
+	do
+	{
+		BATCH *temp = ptr;
+		ptr = ptr->next;
+		free(temp->data);
+		free(temp);
+	} while (ptr != NULL);
+}
+
+
 int main(int argc, char **argv)
 {	
-	if (argc == 3) {
-		char *filename = argv[1];
-		char *newname = argv[2];
-		SF_INFO *info = malloc(sizeof(struct SF_INFO));
-		SNDFILE *file = open_file(filename, info);
-		SNDFILE *newfile = create_file(newname, info);
-		double *ptr = malloc(sizeof(double) * info->channels * BATCH_SIZE);
-		sf_count_t frames_read;
-		NODE *stack = malloc(sizeof(NODE));
-
-		while((frames_read = sf_read_double(file, ptr, BATCH_SIZE)) > 0) {
-			printf("%ld frames requested, %ld frames read...\n", BATCH_SIZE, frames_read);
-			stack = push_node(stack, ptr, frames_read);
-			ptr = malloc(sizeof(double) * info->channels * BATCH_SIZE);
-		}
-
-		
-
-		while(stack->next != NULL) {
-			reverse_buffer(stack->data, stack->length);
-			sf_writef_double(newfile, stack->data, stack->length);
-			stack = pop_node(stack);
-		}
-
-		printf("New file info:\n");
-		print_info(info);
-
-		free(info);
-		free(ptr);
-		free(stack);
-
-		if (sf_close(file) == 0) {
-			printf("File %s closed\n", filename);
-		} else {
-			fprintf(stderr, "Error closing file\n");
-		}
-
-		if (sf_close(newfile) == 0) {
-			printf("File new_beep.wav closed\n");
-		} else {
-			fprintf(stderr, "Error closing file\n");
-		}
+	if (argc !=2)
+	{
+		fprintf(stderr, "Incorrect usage\n");
+		exit(1);
 	}
+
+	TUBECONFIG *config;
+	BATCH *head;
+	BATCH *ptr;
+	SF_INFO *info;
+	SNDFILE *file;
+	CIRCUITSTATE *state = NULL;
+	double bounds;
+
+	info = calloc(1, sizeof(SF_INFO));
+	file = create_file(argv[1], info);
+
+	head = malloc(sizeof(BATCH));
+	head->next = NULL;
+	head->length = 0;
+	ptr = head;
+	config = calloc(1, sizeof(TUBECONFIG));
+	config = set_config(_12AX7, config, false);
+	print_config(config);
+
+	while(true)
+	{
+		ptr->next = (BATCH *) malloc(sizeof(BATCH));
+		ptr = ptr->next;
+		ptr->data = malloc(sizeof(double) * BATCH_SIZE);
+		sf_count_t frames_read = sf_read_double(file, ptr->data, BATCH_SIZE);
+		state = process_buffer(ptr, config, state, (int) info->samplerate, (int) BATCH_SIZE);
+		ptr->length = (uint) frames_read;
+		bounds = fmax(ptr->bounds, bounds);
+		if (frames_read < BATCH_SIZE)
+		{
+			break;
+		}
+		
+	}
+
+	double factor = 1 / bounds;
+
+	head = rescale(head, factor);
+
+	free_batches(head);
+	free(config);
+	free(file);
+	free(info);
+
 	return 0;
 }
