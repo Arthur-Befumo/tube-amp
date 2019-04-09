@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sndfile.h>
+#include <math.h>
 #include "tubeamp.h"
 
 #define BATCH_SIZE ((sf_count_t) 10000)
@@ -12,7 +13,7 @@ open_file(const char *filename, SF_INFO *info)
 {
 	SNDFILE *file = sf_open(filename, SFM_READ, info);
 	if (file == NULL) {
-		fprintf(stderr, "Failed to open file '%s'", filename);
+		fprintf(stderr, "Failed to open file '%s'\n", filename);
 	}
 	else {
 		printf("Opened file: '%s'\n", filename);
@@ -64,6 +65,31 @@ free_batches(BATCH *ptr)
 	} while (ptr != NULL);
 }
 
+void
+scale_and_write(double bound, BATCH *head, SF_INFO *info)
+{
+	double factor = 1 / bound;
+	BATCH *ptr = rescale(head, factor);
+	SNDFILE *new_file = create_file("new_file.wav", info);
+
+	
+	while((ptr = ptr->next) != NULL)
+	{
+		sf_write_double(new_file, ptr->data, (sf_count_t) ptr->length);
+	}
+
+	sf_close(new_file);
+}
+
+BATCH *
+new_batch(sf_count_t size)
+{
+	BATCH *ptr = (BATCH *) malloc(sizeof(BATCH));
+	ptr->data = calloc(size, sizeof(double));
+	ptr->next = NULL;
+	ptr->bounds = 0;
+	return ptr;
+}
 
 int main(int argc, char **argv)
 {	
@@ -79,42 +105,41 @@ int main(int argc, char **argv)
 	SF_INFO *info;
 	SNDFILE *file;
 	CIRCUITSTATE *state = NULL;
-	double bounds;
+	double bound = 0;
 
 	info = calloc(1, sizeof(SF_INFO));
-	file = create_file(argv[1], info);
+	file = open_file(argv[1], info);
 
-	head = malloc(sizeof(BATCH));
+	head = calloc(1,sizeof(BATCH));
 	head->next = NULL;
 	head->length = 0;
 	ptr = head;
 	config = calloc(1, sizeof(TUBECONFIG));
 	config = set_config(_12AX7, config, false);
-	print_config(config);
 
 	while(true)
 	{
-		ptr->next = (BATCH *) malloc(sizeof(BATCH));
+		ptr->next = new_batch(BATCH_SIZE);
 		ptr = ptr->next;
-		ptr->data = malloc(sizeof(double) * BATCH_SIZE);
 		sf_count_t frames_read = sf_read_double(file, ptr->data, BATCH_SIZE);
 		state = process_buffer(ptr, config, state, (int) info->samplerate, (int) BATCH_SIZE);
-		ptr->length = (uint) frames_read;
-		bounds = fmax(ptr->bounds, bounds);
+		ptr->length = (int) frames_read;
+		bound = fmax(ptr->bounds, bound);
+
 		if (frames_read < BATCH_SIZE)
 		{
+			ptr->next = NULL;
 			break;
 		}
 		
 	}
 
-	double factor = 1 / bounds;
+	scale_and_write(bound, head, info);
 
-	head = rescale(head, factor);
-
+	free(state);
 	free_batches(head);
 	free(config);
-	free(file);
+	sf_close(file);
 	free(info);
 
 	return 0;

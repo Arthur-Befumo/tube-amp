@@ -5,7 +5,7 @@
 typedef struct Batch
 {
 	struct Batch *next;
-	uint length;
+	int length;
 	double *data;
 	double bounds;
 } BATCH;

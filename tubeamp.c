@@ -173,8 +173,7 @@ process_buffer(BATCH *batch, TUBECONFIG *config, CIRCUITSTATE *state, int sample
 		bounds = fmax(fabs(batch->data[i]), bounds);
 	}
 
-	free(state);
-
+	batch->bounds = bounds;
 	return state;
 }
 
@@ -187,11 +186,12 @@ get_baseline(TUBECONFIG *config)
 	batch = malloc(sizeof(BATCH));
 	batch->data = (double *) calloc(100, sizeof(double));
 	batch->next = NULL;
-	process_buffer(batch, config, NULL, 44100, 100);
+	CIRCUITSTATE *state = process_buffer(batch, config, NULL, 44100, 100);
 	
 	baseline = batch->data[99];
 	free(batch->data);
 	free(batch);
+	free(state);
 
 	return baseline;
 }
