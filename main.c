@@ -140,6 +140,7 @@ int main(int argc, char **argv)
 		else
 		{
 			fprintf(stderr, "Error: Invalid flag: %s\n", argv[arg]);
+			fprintf(stderr, "Usage: %s input_file output_file [-g input_gain] [-s output_scale] [-debug]\n", argv[0]);
 			exit(0);
 		}
 	}
