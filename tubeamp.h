@@ -40,7 +40,7 @@ typedef enum TubeName
 
 CIRCUITSTATE *
 process_buffer(BATCH *batch, TUBECONFIG *config, 
-		CIRCUITSTATE *state, int sample_rate, int buffer_length);
+		CIRCUITSTATE *state, int sample_rate, int buffer_length, double input_gain);
 
 TUBECONFIG *
 set_config(TUBENAME tube_name, TUBECONFIG *config, bool grid_current);

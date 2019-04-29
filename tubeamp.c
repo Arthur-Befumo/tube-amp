@@ -156,7 +156,7 @@ update_state(CIRCUITSTATE *state, TUBECONFIG *config, int sample_rate)
 }
 
 CIRCUITSTATE *
-process_buffer(BATCH *batch, TUBECONFIG *config, CIRCUITSTATE *state, int sample_rate, int buffer_length)
+process_buffer(BATCH *batch, TUBECONFIG *config, CIRCUITSTATE *state, int sample_rate, int buffer_length, double input_gain)
 {
 	double bounds = 0;
 
@@ -167,7 +167,7 @@ process_buffer(BATCH *batch, TUBECONFIG *config, CIRCUITSTATE *state, int sample
 
 	for (int i = 0; i < buffer_length; i++)
 	{
-		state->U = batch->data[i];
+		state->U = input_gain * batch->data[i];
 		state = update_state(state, config, sample_rate);
 		batch->data[i] = state->Y - config->baseline;
 		bounds = fmax(fabs(batch->data[i]), bounds);
@@ -186,7 +186,7 @@ get_baseline(TUBECONFIG *config)
 	batch = malloc(sizeof(BATCH));
 	batch->data = (double *) calloc(100, sizeof(double));
 	batch->next = NULL;
-	CIRCUITSTATE *state = process_buffer(batch, config, NULL, 44100, 100);
+	CIRCUITSTATE *state = process_buffer(batch, config, NULL, 44100, 100, 1);
 	
 	baseline = batch->data[99];
 	free(batch->data);
