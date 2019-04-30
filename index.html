@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <div align="center">
+        <h1>CPSC 490: Simulating a Triode Tube Guitar Amplifier Using a Non-Linear State-Space Representation</h1>
+        <h3>Arthur Befumo - arthur.befumo@yale.edu</h3><h3>Advisor: Scott Petersen - scott.peterson@yale.edu</h3>
+        </div>
+        <h2>Abstract</h2>
+        <p>
+                A triode vacuum tube is a simple electrical device which can be used to amplify an electrical signal, 
+                and consists of three electrodes—termed the ‘plate’ ‘cathode’ and ‘grid’—enclosed in a glass vacuum tube. 
+                The plate is heated by a power source, acting as a pump which moves electrons from the plate to the cathode. 
+                When current is applied to the grid, this flow is disrupted, allowing a relatively weak input signal to have 
+                an amplified effect on the plate to cathode current. Although transistors have replaced vacuum tubes in many 
+                modern applications, vacuum tube guitar amplifiers are still manufactured and sought after due to their distinct, 
+                non-linear distortion. This non-linearity makes exact simulations of triode tube amplifier circuits computationally 
+                prohibitive, and many commercial products for emulating tube distortion take a “black-box” approach which completely 
+                ignores the underlying physics. For this project, an analytical approach was taken. Several equations describing 
+                the behavior of a triode tube circuit, some phenomenological and some derived from fundamental physics, are used 
+                to produce an extended non-linear state-space representation of the circuit. Numerical methods for approximation 
+                can then be used to solve for the state of the circuit given its current state and the next input. 
+                The tube amp simulation is implemented in C for efficiency. Listening tests and a visual analysis of processed signals 
+                show the circuit simulation produces a reasonably close approximation of tube distortion, and previous work has shown 
+                that this numerical method is efficient enough for real-time signal processing.
+        </p>
+        <h2>Links</h2>
+        <ul>
+            <li><a href="./code.html">Code</a></li>
+            <li><a href="./proposal.pdf">Project Proposal</a></li>
+            <li><a href="./finalreport.pdf">Final Report</a></li>
+        </ul>   
+    </body>
+</html>
