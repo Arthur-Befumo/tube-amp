@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -g -Wall
-TARGET = main
+TARGET = ampsim
 
 all: $(TARGET)
 

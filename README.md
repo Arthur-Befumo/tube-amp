@@ -4,7 +4,7 @@ Tube amp emulator written in C by Arthur Befumo
 To compile, run make.
 
 Usage: 
-ampsim input_file output_file
+ampsim input_file output_file [-g input_gain -s output_scale -debug]
 
 Optional flags:
 -g (input_gain): Input gain is a multiplication factor applied to the input file before processing. It defaults to 0.4. Higher values generally result in higher distortion. It takes any double value (negative values will flip the incoming sound wave).
