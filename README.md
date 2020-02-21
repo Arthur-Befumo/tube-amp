@@ -1,6 +1,8 @@
 # tube-amp
 Tube amp emulator written in C by Arthur Befumo
 
+This was completed as part of Yale's CPSC 490 Senior Project class. The associated paper can be found here: https://zoo.cs.yale.edu/classes/cs490/18-19b/befumo.arthur.atb44/finalprojectreport.pdf.
+
 To compile, run make.
 
 Usage: 
